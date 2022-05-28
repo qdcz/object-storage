@@ -5,12 +5,18 @@ const qiniu = require("../qiniuyun/index");
 
 
 // 单文件上传
-router.get('/singleUploadFile', async function (ctx, next) {
-    let localFile = path.join(path.resolve(), 'qiniuyun', 'index.js')
-    let saveName = 'ad/saveName.js';
-    let uploadToken = qiniu.uoloadToken(saveName,undefined,{fileType: 2},false)
-    let res = await qiniu.uploadFile(uploadToken, localFile, saveName)
-    ctx.body = res
+router.post('/singleUploadFile', async function (ctx, next) {
+    let {filePath} = ctx.request.body;
+    if (!filePath) ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"};
+    let localFile = path.join(path.resolve(), 'qiniuyun', 'index.js');
+    let uploadToken = qiniu.uoloadToken(filePath, undefined, {fileType: 2}, false);
+    let res = await qiniu.uploadFile(uploadToken, localFile, filePath);
+
+    if (res.state == 'ok') {
+        return ctx.body = {code: 200, msg: "上传成功！", data: res.data.items}
+    } else {
+        return ctx.body = {code: 204, msg: res.respBody.error}
+    }
 })
 
 router.get('/selFileInfo', async function (ctx, next) {
@@ -21,30 +27,49 @@ router.get('/selFileInfo', async function (ctx, next) {
 })
 
 
-// 创建一个文件夹
+/**
+ * 创建一个文件夹
+ */
 router.post('/mkdir', async function (ctx, next) {
     let {filePath} = ctx.request.body;
-    if(!filePath) ctx.body = {code:204,msg:"入参错误，请查看接口文档！"}
+    if (!filePath) ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
     let localFile = path.join(path.resolve(), 'public', 'useForUploadFolder.js')
-    let uploadToken = qiniu.uoloadToken(filePath, undefined, {fileType: 1},true)
+    let uploadToken = qiniu.uoloadToken(filePath, undefined, {fileType: 1}, true)
     let res = await qiniu.uploadFile(uploadToken, localFile, filePath)
-    ctx.body = res
+    if (res.state == 'ok') {
+        return ctx.body = {code: 200, msg: "创建成功！"}
+    } else {
+        return ctx.body = {code: 204, msg: res.respBody.error}
+    }
 })
 
-// 查询所有的文件列表
+/**
+ * 查询所有的文件列表
+ */
 router.get('/selFileList', async function (ctx, next) {
+    let {prefixFilePath, limit} = ctx.request.query;
     let res = await qiniu.selFileList({
-        prefix: "", limit: 999
+        prefix: prefixFilePath || "", limit: limit || 20
     })
-    ctx.body = res
+    if (res.state == 'ok') {
+        return ctx.body = {code: 200, msg: "查询成功！", data: res.data.items}
+    } else {
+        return ctx.body = {code: 204, msg: res.respBody.error}
+    }
 })
 
-// 删除文件
+/**
+ * 删除文件
+ */
 router.delete("/delFile", async function (ctx, next) {
     let {filePath} = ctx.request.body;
-    if(!filePath) ctx.body = {code:204,msg:"入参错误，请查看接口文档！"}
-    let res = await qiniu.delFile(filePath)
-    ctx.body = res
+    if (!filePath) ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
+    let res = await qiniu.delFile(filePath);
+    if (res.state == 'ok') {
+        return ctx.body = {code: 200, msg: "删除成功！"}
+    } else {
+        return ctx.body = {code: 204, msg: res.respBody.error}
+    }
 })
 
 module.exports = router

@@ -36,7 +36,7 @@ const uoloadToken = function (fileName, bucket, opt, overUpload) {
         returnBody: '{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"bucket":"$(bucket  )","name":"$(x:name)"}'
     });
     putPolicy = Object.assign(putPolicy, opt);
-    console.log(overUpload ? `${bucket}:${fileName}` : bucket)
+    // console.log(overUpload ? `${bucket}:${fileName}` : bucket)
     return putPolicy.uploadToken(mac);
 }
 
@@ -100,7 +100,12 @@ const selFileInfo = function (fileName, bucket = config.options.bucket) {
 }
 
 
-// 查询文件/文件列表
+/**
+ * 查询文件/文件列表
+ * @param options
+ * @param bucket
+ * @returns {Promise<unknown>}
+ */
 const selFileList = function (options, bucket = config.options.bucket) {
     return new Promise((resolve, reject) => {
         bucketManager.listPrefix(bucket, options, function (err, respBody, respInfo) {
@@ -128,7 +133,12 @@ const selFileList = function (options, bucket = config.options.bucket) {
 }
 
 
-// 删除文件
+/**
+ * 删除文件
+ * @param fileName
+ * @param bucket
+ * @returns {Promise<unknown>}
+ */
 const delFile = function (fileName, bucket = config.options.bucket) {
     return new Promise((resolve, reject) => {
         bucketManager.delete(bucket, fileName, function (err, respBody, respInfo) {
