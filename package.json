@@ -15,6 +15,7 @@
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-convert": "^2.0.0",
+    "koa-cors": "0.0.16",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.1",
     "koa-onerror": "^4.2.0",

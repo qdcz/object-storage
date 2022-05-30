@@ -7,7 +7,7 @@ const qiniu = require("../qiniuyun/index");
 // 单文件上传
 router.post('/singleUploadFile', async function (ctx, next) {
     let {filePath} = ctx.request.body;
-    if (!filePath) ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"};
+    if (!filePath) return ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"};
     let localFile = path.join(path.resolve(), 'qiniuyun', 'index.js');
     let uploadToken = qiniu.uoloadToken(filePath, undefined, {fileType: 2}, false);
     let res = await qiniu.uploadFile(uploadToken, localFile, filePath);
@@ -32,7 +32,7 @@ router.get('/selFileInfo', async function (ctx, next) {
  */
 router.post('/mkdir', async function (ctx, next) {
     let {filePath} = ctx.request.body;
-    if (!filePath) ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
+    if (!filePath) return ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
     let localFile = path.join(path.resolve(), 'public', 'useForUploadFolder.js')
     let uploadToken = qiniu.uoloadToken(filePath, undefined, {fileType: 1}, true)
     let res = await qiniu.uploadFile(uploadToken, localFile, filePath)
@@ -63,12 +63,26 @@ router.get('/selFileList', async function (ctx, next) {
  */
 router.delete("/delFile", async function (ctx, next) {
     let {filePath} = ctx.request.body;
-    if (!filePath) ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
+    if (!filePath) return  ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
     let res = await qiniu.delFile(filePath);
     if (res.state == 'ok') {
         return ctx.body = {code: 200, msg: "删除成功！"}
     } else {
         return ctx.body = {code: 204, msg: res.respBody.error}
+    }
+})
+
+/**
+ * 删除目录（含深度删除）
+ */
+router.delete("/delFolder", async function (ctx, next) {
+    let {folderPath} = ctx.request.body;
+    if (!folderPath) return ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
+    let res = await qiniu.delFolder(folderPath);
+    if (res.state == 'ok') {
+        return ctx.body = {code: 200, msg: "删除成功！",data:res.data}
+    } else {
+        return ctx.body = {code: 204, msg: res.data }
     }
 })
 

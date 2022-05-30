@@ -102,7 +102,11 @@ const selFileInfo = function (fileName, bucket = config.options.bucket) {
 
 /**
  * 查询文件/文件列表
- * @param options
+ * @param options  对象
+ * {
+ *   prefix: prefixFilePath || "",      前缀
+ *   limit: limit || 20                 条数
+ *  }
  * @param bucket
  * @returns {Promise<unknown>}
  */
@@ -135,8 +139,8 @@ const selFileList = function (options, bucket = config.options.bucket) {
 
 /**
  * 删除文件
- * @param fileName
- * @param bucket
+ * @param fileName  文件名字
+ * @param bucket    桶名字
  * @returns {Promise<unknown>}
  */
 const delFile = function (fileName, bucket = config.options.bucket) {
@@ -165,6 +169,56 @@ const delFile = function (fileName, bucket = config.options.bucket) {
     })
 }
 
+/**
+ * 删除文件夹目录及其文件   查询目录后面必须加上/
+ * @param folderName    文件夹名字    eg:test/ad/
+ * @param bucket        桶名字
+ */
+const delFolder = function (folderName, bucket = config.options.bucket) {
+    return new Promise(async (resolve, reject) => {
+        if (folderName.slice(-1) != "/") {
+            resolve({
+                state: "fail",
+                data: "后缀必须带有/符号"
+            })
+            return
+        }
+
+        /**
+         * 先需查询出该文件夹下的所有目录 按层级划分
+         * 然后逐一删除文件夹内的文件 从最内层级开始删
+         */
+        const dirFloder = []; // 给文件夹做等级编号
+        const delQueue = []; // 需要删除的文件路径队列(先进先删)
+
+        let list = await selFileList({
+            prefix: folderName || "",
+            limit: 100
+        })
+        list.data.items.forEach(i => {
+            if (i.key.slice(-1) == '/') { // 判定为是目录
+                let count = i.key.match(/\//igm).length;
+                dirFloder.push({
+                    key:i.key,
+                    level:count
+                })
+            } else { // 不是目录是文件可以直接删除
+                delQueue.push(i.key)
+            }
+        })
+        dirFloder.sort((a,b)=>b.level-a.level).forEach(i=>{
+            delQueue.push(i.key)
+        })
+
+
+        // TODO 调用批量删除成功 再去递归查询当前是否还有漏网之鱼的文件 然后再删除
+        resolve({
+            state: "ok",
+            data: delQueue
+        })
+    })
+}
+
 
 module.exports = {
     qiniu,
@@ -172,5 +226,6 @@ module.exports = {
     uploadFile,
     selFileInfo,
     selFileList,
-    delFile
+    delFile,
+    delFolder
 }
