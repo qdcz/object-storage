@@ -189,7 +189,7 @@ const delFolder = function (folderName, bucket = config.options.bucket) {
          * 然后逐一删除文件夹内的文件 从最内层级开始删
          */
         const dirFloder = []; // 给文件夹做等级编号
-        const delQueue = []; // 需要删除的文件路径队列(先进先删)
+        let delQueue = []; // 需要删除的文件路径队列(先进先删)
 
         let list = await selFileList({
             prefix: folderName || "",
@@ -199,23 +199,66 @@ const delFolder = function (folderName, bucket = config.options.bucket) {
             if (i.key.slice(-1) == '/') { // 判定为是目录
                 let count = i.key.match(/\//igm).length;
                 dirFloder.push({
-                    key:i.key,
-                    level:count
+                    key: i.key,
+                    level: count
                 })
             } else { // 不是目录是文件可以直接删除
                 delQueue.push(i.key)
             }
         })
-        dirFloder.sort((a,b)=>b.level-a.level).forEach(i=>{
+        dirFloder.sort((a, b) => b.level - a.level).forEach(i => {
             delQueue.push(i.key)
         })
 
 
-        // TODO 调用批量删除成功 再去递归查询当前是否还有漏网之鱼的文件 然后再删除
-        resolve({
-            state: "ok",
-            data: delQueue
-        })
+        // 整理成七牛云需要删除的格式数组
+        delQueue = delQueue.map(i => qiniu.rs.deleteOp(bucket, i));
+        let excuteIndex = 0; // 批次删除执行 当前所属下标
+        let excuteResult = undefined; // 批次删除执行 删除成功数据缓存
+        // 每个operations的数量不可以超过1000个，如果总数量超过1000，需要分批发送（批次删除）
+        for (let i = 1; i <= Math.ceil(delQueue.length / 2000); i++) {
+            bucketManager.batch(delQueue, function (err, respBody, respInfo) {
+                if (err) {
+                    resolve({
+                        state: "fail",
+                        data: err
+                    })
+                } else {
+                    // 200 is success, 298 is part success
+                    if (parseInt(respInfo.statusCode / 100) == 2) {
+                        respBody.forEach(function (item) {
+                            if (item.code == 200) {
+                                if (i == Math.ceil(delQueue.length / 2000)) {
+                                    resolve({
+                                        state: "ok",
+                                        data: excuteResult
+                                    })
+                                } else {
+                                    excuteResult.push(respBody)
+                                }
+                                // resolve({
+                                //     state: "ok",
+                                //     data: respBody
+                                // })
+                            } else {
+                                resolve({
+                                    state: "ok & !=200",
+                                    respInfo: respInfo,
+                                    respBody: respBody
+                                })
+                            }
+                        });
+                    } else {
+                        resolve({
+                            state: "ok & !=200",
+                            respInfo: respInfo,
+                            respBody: respBody
+                        })
+                    }
+                }
+                excuteIndex++
+            });
+        }
     })
 }
 
@@ -229,3 +272,17 @@ module.exports = {
     delFile,
     delFolder
 }
+
+
+/**
+ * TODO
+ * 上传:  文件上传、单文件上传、分段上传、批量上传
+ * 下载：
+ * 删除【ok】:  单个删除、删除目录（深度删除）   多个删除文件、目录（并发调用接口即可）
+ * 修改：
+ * 查询【ok】：  查询所有文件、查询指定目录、查询指定文件
+ * 移动：
+ * 复制：
+ * 重命名：
+ *
+ */
