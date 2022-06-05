@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<input class="input" type="file">
+<button class="startUpload">开始上传</button>
+</body>
+<script>
+    let block1Result = null;
+    let block1FileName = null;
+    const service = function (methods, url, params, success = () => {
+    }, fail = () => {
+    }) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(methods, url, true)
+        // xhr.setRequestHeader('Content-type', 'multipart/form-data')	// 设置Content-type
+        xhr.send(params)
+        xhr.onreadystatechange = function (param) {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var data = xhr.responseText
+                try {
+                    data = JSON.parse(data)
+                } catch (e) {
+                    console.log("解析json数据错误")
+                }
+                success(data)
+            } else {
+                fail(data)
+            }
+        }
+    }
+    let dom_input = document.querySelector(".input");
+    dom_input.addEventListener("change", function (file) {
+        // 获取上传的文件信息
+        file = this.files[0];
+        block1FileName = file.name.split(".")[0]
+        // 创建FileReader
+        var fl = new FileReader();
+        // 将文件读取成DataURL格式
+        fl.readAsDataURL(file);
+        fl.onload = function () {
+            let formData = new FormData()
+            formData.append("files", fl.result)  // 获取文件流 fl.result
+            formData.append("fileName", file.name)
+            formData.append("fileSize", file.size)
+            // service("POST","http://127.0.0.1:5300/service/excelToJson",formData,(e)=>{
+            // service("POST", "http://81.69.20.73:5300/service/excelToJson", formData, (e) => {
+            service("POST", "http://127.0.0.1:5302/qiniu/singleUploadFileStream", formData, (e) => {
+                console.log("返回数据：",e);
+            })
+        }
+    })
+
+    document.querySelector(".startUpload").addEventListener("click", function (e) {
+
+    })
+</script>
+</html>

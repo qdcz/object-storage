@@ -1,5 +1,10 @@
-const router = require('koa-router')();
 const path = require('path');
+const fs = require('fs');
+const stream = require('stream')
+// const { Buffer } = require('node:buffer');
+
+const router = require('koa-router')();
+
 router.prefix('/qiniu');
 const qiniu = require("../qiniuyun/index");
 
@@ -18,6 +23,28 @@ router.post('/singleUploadFile', async function (ctx, next) {
         return ctx.body = {code: 204, msg: res.respBody.error}
     }
 })
+
+// 单文件上传-流式
+router.post('/singleUploadFileStream', async function (ctx, next) {
+    let {files,fileName,fileSize} = ctx.request.body; // 获取上传文件
+    let filePath='test/' + fileName;
+
+    const fileBuffer = Buffer.from(files); // 将上传的base64转为buffer
+    let readable = new stream.Readable(); // 创建可读流
+    readable.push(fileBuffer); // 往可读流塞数据
+    readable.push(null); // 结束
+    // 获取上传凭证
+    let uploadToken = qiniu.uoloadToken(filePath, undefined, {fileType: 2}, false);
+    let res = await qiniu.uploadFileForStream(uploadToken, readable, filePath);
+    console.log(res)
+    ctx.body = {code: 204, msg: 666,res}
+
+    // 正确的Buffer转ReadStream的写法：
+    // const stream = require('stream');
+    // const bufferStream = new stream.PassThrough();
+    // const streams = bufferStream.end(Buffer);
+})
+
 
 router.get('/selFileInfo', async function (ctx, next) {
     let fileName = '';

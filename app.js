@@ -4,8 +4,11 @@ const views = require('koa-views')
 const json = require('koa-json')
 const onerror = require('koa-onerror')
 const bodyparser = require('koa-bodyparser')
+const koaBody = require('koa-body');
 const logger = require('koa-logger')
 const cors = require('koa-cors');
+
+const path =  require('path')
 
 const index = require('./routes/index')
 const users = require('./routes/users')
@@ -16,9 +19,15 @@ onerror(app)
 
 app.use(cors());
 // middlewares
-app.use(bodyparser({
-    enableTypes:['json', 'form', 'text']
-}))
+// app.use(bodyparser({
+//     enableTypes:['json', 'form', 'text']
+// }))
+// 直能解析put和post
+app.use(koaBody({
+    multipart: true,
+    json: true,
+    strict: false, //如果启用，则不解析GET，HEAD，DELETE请求，默认为true
+}));
 app.use(json())
 app.use(logger())
 app.use(require('koa-static')(__dirname + '/public'))

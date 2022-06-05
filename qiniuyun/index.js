@@ -72,6 +72,28 @@ const uploadFile = function (uploadToken, localFile, saveName, bucket = config.o
     })
 }
 
+/**
+ * 上传文件（流式上传）
+ * @param uploadToken
+ * @param localFile
+ * @param saveName
+ * @param bucket
+ */
+const uploadFileForStream = function (uploadToken, fileStream, saveName, bucket = config.options.bucket) {
+    formUploader.putStream(uploadToken, saveName, fileStream, putExtra, function(respErr,
+                                                                                respBody, respInfo) {
+        if (respErr) {
+            throw respErr;
+        }
+        if (respInfo.statusCode == 200) {
+            console.log(respBody);
+        } else {
+            console.log(respInfo.statusCode);
+            console.log(respBody);
+        }
+    });
+}
+
 // 查询文件信息
 const selFileInfo = function (fileName, bucket = config.options.bucket) {
     return new Promise((resolve, reject) => {
@@ -98,7 +120,6 @@ const selFileInfo = function (fileName, bucket = config.options.bucket) {
         })
     })
 }
-
 
 /**
  * 查询文件/文件列表
@@ -135,7 +156,6 @@ const selFileList = function (options, bucket = config.options.bucket) {
         })
     })
 }
-
 
 /**
  * 删除文件
@@ -267,6 +287,7 @@ module.exports = {
     qiniu,
     uoloadToken,
     uploadFile,
+    uploadFileForStream,
     selFileInfo,
     selFileList,
     delFile,
