@@ -3,6 +3,10 @@ const qiniu = require("qiniu");
 qiniu.conf.ACCESS_KEY = config.options.accessKey;
 qiniu.conf.SECRET_KEY = config.options.secretKey;
 
+const PUBLICDOMAIN = 'www.qddscxy.cn'; // 公开空间前缀域名
+const PRIVATEDOMAIN = 'rd7t1thzx.hn-bkt.clouddn.com'; // 私有空间前缀域名
+
+
 const qiniuConfig = new qiniu.conf.Config();
 /**
  * 华东    qiniu.zone.Zone_z0
@@ -24,9 +28,8 @@ const bucketManager = new qiniu.rs.BucketManager(mac, qiniuConfig);
  */
 let putExtra = new qiniu.form_up.PutExtra();
 let formUploader = new qiniu.form_up.FormUploader(qiniuConfig);
-
-
 // 生成一个token凭证
+// 查询文件信息
 const uoloadToken = function (fileName, bucket, opt, overUpload) {
     bucket = bucket || config.options.bucket;
     opt = opt || {};
@@ -39,8 +42,6 @@ const uoloadToken = function (fileName, bucket, opt, overUpload) {
     // console.log(overUpload ? `${bucket}:${fileName}` : bucket)
     return putPolicy.uploadToken(mac);
 }
-
-
 /**
  * 上传文件
  * @param fileName
@@ -71,7 +72,6 @@ const uploadFile = function (uploadToken, localFile, saveName, bucket = config.o
         });
     })
 }
-
 /**
  * 上传文件（流式上传）
  * @param uploadToken
@@ -80,22 +80,30 @@ const uploadFile = function (uploadToken, localFile, saveName, bucket = config.o
  * @param bucket
  */
 const uploadFileForStream = function (uploadToken, fileStream, saveName, bucket = config.options.bucket) {
-    formUploader.putStream(uploadToken, saveName, fileStream, putExtra, function(respErr,
-                                                                                respBody, respInfo) {
-        if (respErr) {
-            throw respErr;
-        }
-        if (respInfo.statusCode == 200) {
-            console.log(respBody);
-        } else {
-            console.log(respInfo.statusCode);
-            console.log(respBody);
-        }
-    });
-}
-
-// 查询文件信息
-const selFileInfo = function (fileName, bucket = config.options.bucket) {
+    return new Promise((resolve, reject) => {
+        formUploader.putStream(uploadToken, saveName, fileStream, putExtra, function (respErr, respBody, respInfo) {
+            if (respErr) {
+                resolve({
+                    state: "fail",
+                    data: respErr
+                })
+            } else {
+                if (respInfo.statusCode == 200) {
+                    resolve({
+                        state: "ok",
+                        data: respBody
+                    })
+                } else {
+                    resolve({
+                        state: "ok & !=200",
+                        respInfo: respInfo,
+                        respBody: respBody
+                    })
+                }
+            }
+        })
+    })
+}, selFileInfo = function (fileName, bucket = config.options.bucket) {
     return new Promise((resolve, reject) => {
         bucketManager.stat(bucket, fileName, function (err, respBody, respInfo) {
             if (err) {
@@ -120,7 +128,6 @@ const selFileInfo = function (fileName, bucket = config.options.bucket) {
         })
     })
 }
-
 /**
  * 查询文件/文件列表
  * @param options  对象
@@ -156,7 +163,6 @@ const selFileList = function (options, bucket = config.options.bucket) {
         })
     })
 }
-
 /**
  * 删除文件
  * @param fileName  文件名字
@@ -188,7 +194,6 @@ const delFile = function (fileName, bucket = config.options.bucket) {
         })
     })
 }
-
 /**
  * 删除文件夹目录及其文件   查询目录后面必须加上/
  * @param folderName    文件夹名字    eg:test/ad/
@@ -281,12 +286,32 @@ const delFolder = function (folderName, bucket = config.options.bucket) {
         }
     })
 }
+/**
+ * 获取文件下载链接（公开空间）
+ * @param filePath  文件路径
+ */
+const publicFileDownloadLink = function (filePath) {
+    let publicDownloadUrl = bucketManager.publicDownloadUrl(PUBLICDOMAIN, filePath);
+    return publicDownloadUrl
+}
+/**
+ * 获取文件下载链接（私有空间）
+ * @param filePath  文件路径
+ * @param deadline  有效时间
+ */
+const privateFileDownloadLink = function (filePath, deadline) {
+    deadline = deadline || parseInt(Date.now() / 1000) + 3600; // 1小时过期
+    let publicDownloadUrl = bucketManager.privateDownloadUrl(PRIVATEDOMAIN, filePath, deadline);
+    return publicDownloadUrl
+};
 
 
 module.exports = {
     qiniu,
     uoloadToken,
     uploadFile,
+    publicFileDownloadLink,
+    privateFileDownloadLink,
     uploadFileForStream,
     selFileInfo,
     selFileList,
@@ -298,7 +323,7 @@ module.exports = {
 /**
  * TODO
  * 上传:  文件上传、单文件上传、分段上传、批量上传
- * 下载：
+ * 下载： 公开空间下载链接【ok】 、私有空间下载链接【OK】
  * 删除【ok】:  单个删除、删除目录（深度删除）   多个删除文件、目录（并发调用接口即可）
  * 修改：
  * 查询【ok】：  查询所有文件、查询指定目录、查询指定文件

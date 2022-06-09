@@ -43,19 +43,19 @@
         fl.readAsDataURL(file);
         fl.onload = function () {
             let formData = new FormData()
-            formData.append("files", fl.result)  // 获取文件流 fl.result
+            // formData.append("files", fl.result)  // 获取文件流 fl.result
+            // formData.append("files", fl.result)  // 获取文件流 fl.result
+            formData.append("files", file)  // 获取文件流 fl.result
             formData.append("fileName", file.name)
             formData.append("fileSize", file.size)
             // service("POST","http://127.0.0.1:5300/service/excelToJson",formData,(e)=>{
             // service("POST", "http://81.69.20.73:5300/service/excelToJson", formData, (e) => {
-            service("POST", "http://127.0.0.1:5302/qiniu/singleUploadFileStream", formData, (e) => {
+            service("PUT", "http://127.0.0.1:5302/qiniu/singleUploadFileStream", formData, (e) => {
                 console.log("返回数据：",e);
             })
         }
     })
-
     document.querySelector(".startUpload").addEventListener("click", function (e) {
-
     })
 </script>
 </html>
