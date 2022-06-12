@@ -8,7 +8,6 @@ router.prefix('/qiniu');
 const qiniu = require("../qiniuyun/index");
 
 
-
 // 单文件上传(假的-测试用)
 router.post('/singleUploadFile', async function (ctx, next) {
     let {filePath} = ctx.request.body;
@@ -26,11 +25,10 @@ router.post('/singleUploadFile', async function (ctx, next) {
 
 // 单文件上传-流式(文件传到后端，后端再流式传到七牛云)
 router.put('/singleUploadFileStream', async function (ctx, next) {
-    let {fileName, fileSize,filePath} = ctx.request.body; // 获取上传文件接口的入参
+    let {fileName, fileSize, filePath} = ctx.request.body; // 获取上传文件接口的入参
 
     // 二进制文件直接写入到本地
     const {files} = ctx.request.files; // 获取form-data上传的接口信息
-    console.log(ctx.request.files)
     const reader = fs.createReadStream(files.filepath); // 创建可读流
     /**
      * 不同时写入到本地可以关掉
@@ -40,12 +38,17 @@ router.put('/singleUploadFileStream', async function (ctx, next) {
     // reader.pipe(upStream); // 将可读流的数据消费到可写流
 
 
-
-
     filePath = filePath || 'test/' + fileName; // 传到七牛云的路径
+    // files = files.replace(/\s/g, "+");
     // files = files.replace(/^\w+:\w+\/\w+;base64,/, "");
-    // const fileBuffer = Buffer.from(files, 'base64').toString('ascii'); // 将上传的base64转为buffer
-
+    // const fileBuffer = Buffer.from(files, 'base64').toString('binary'); // 将上传的base64转为buffer
+    // for (let i = 0; i < fileBuffer.length; ++i) {
+    //     if (fileBuffer[i] < 0) {// 调整异常数据
+    //         fileBuffer[i] += 256;
+    //     }
+    // }
+    // fs.writeFileSync("./public/" + fileName, fileBuffer);
+    // return
     // let readable = new stream.Readable(); // 创建可读流
     // readable.push(fileBuffer); // 往可读流塞数据
     // readable.push(null); // 结束
@@ -112,7 +115,7 @@ router.post('/publicFileDownloadLink', async function (ctx, next) {
     if (!filePath) return ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
     let localFile = path.join(path.resolve(), 'public', 'useForUploadFolder.js')
     let res = qiniu.publicFileDownloadLink(filePath)
-    return ctx.body = {code: 200, msg: "创建链接成功！",url:res}
+    return ctx.body = {code: 200, msg: "创建链接成功！", url: res}
 })
 
 /**
@@ -123,7 +126,7 @@ router.post('/privateFileDownloadLink', async function (ctx, next) {
     if (!filePath) return ctx.body = {code: 204, msg: "入参错误，请查看接口文档！"}
     let localFile = path.join(path.resolve(), 'public', 'useForUploadFolder.js')
     let res = qiniu.privateFileDownloadLink(filePath)
-    return ctx.body = {code: 200, msg: "创建链接成功！",url:res}
+    return ctx.body = {code: 200, msg: "创建链接成功！", url: res}
 })
 
 
@@ -131,10 +134,10 @@ router.post('/privateFileDownloadLink', async function (ctx, next) {
  * 查询所有的文件列表
  */
 router.get('/selFileList', async function (ctx, next) {
-    let {prefixFilePath, limit,bucket} = ctx.request.query ;
+    let {prefixFilePath, limit, bucket} = ctx.request.query;
     let res = await qiniu.selFileList({
         prefix: prefixFilePath || "", limit: limit || 20
-    },bucket)
+    }, bucket)
     if (res.state == 'ok') {
         return ctx.body = {code: 200, msg: "查询成功！", data: res.data.items}
     } else {
