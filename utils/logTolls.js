@@ -1,5 +1,5 @@
-var log4js = require('log4js');
-var logsConfig = require('./logs');
+const log4js = require('log4js');
+const logsConfig = require('../config/log4js');
 //加载配置文件
 log4js.configure(logsConfig);
 //调用预先定义的日志名称
@@ -10,9 +10,9 @@ var handleLogger = log4js.getLogger("handleLogger");
 var consoleLogger = log4js.getLogger();
 
 // 格式化日志文本 加上日志头尾和换行方便查看 ==>  普通日志、请求日志、响应日志、操作日志、错误日志
-var formatText = {
+const formatText = {
     info: function(info) {
-        var logText = new String();
+        let logText = new String();
         //响应日志头信息
         logText += "\n" + "***************info log start ***************" + "\n";
         //响应内容
@@ -22,8 +22,8 @@ var formatText = {
         return logText;
     },
     request: function(req, resTime) {
-        var logText = new String();
-        var method = req.method;
+        let logText = new String();
+        let method = req.method;
         //访问方法
         logText += "request method: " + method + "\n";
         //请求原始地址
@@ -31,7 +31,7 @@ var formatText = {
         //客户端ip
         logText += "request client ip:  " + req.ip + "\n";
         //开始时间
-        var startTime;
+        let startTime;
         //请求参数
         if (method === 'GET') {
             logText += "request query:  " + JSON.stringify(req.query) + "\n";
@@ -45,7 +45,7 @@ var formatText = {
         return logText;
     },
     response: function(ctx, resTime) {
-        var logText = new String();
+        let logText = new String();
         //响应日志开始
         logText += "\n" + "*************** response log start ***************" + "\n";
         //添加请求日志
@@ -59,7 +59,7 @@ var formatText = {
         return logText;
     },
     handle: function(info) {
-        var logText = new String();
+        let logText = new String();
         //响应日志开始
         logText += "\n" + "***************info log start ***************" + "\n";
         //响应内容
@@ -69,7 +69,7 @@ var formatText = {
         return logText;
     },
     error: function(ctx, err, resTime) {
-        var logText = new String();
+        let logText = new String();
         //错误信息开始
         logText += "\n" + "*************** error log start ***************" + "\n";
         //添加请求日志

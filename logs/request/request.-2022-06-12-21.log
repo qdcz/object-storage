@@ -1,0 +1,6 @@
+[2022-06-12T21:00:45.480] [INFO] reqLogger - request method: GET
+request originalUrl:  /qiniu/selFileList?prefixFilePath=&bucket=persion-picture
+request client ip:  ::ffff:127.0.0.1
+request query:  {"prefixFilePath":"","bucket":"persion-picture"}
+request time: 101
+
