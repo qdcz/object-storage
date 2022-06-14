@@ -22,11 +22,14 @@
     "koa-logger": "^3.2.1",
     "koa-onerror": "^4.2.0",
     "koa-router": "^10.1.1",
+    "koa-session": "^6.2.0",
     "koa-static": "^5.0.0",
     "koa-views": "^8.0.0",
     "log4js": "^6.5.2",
     "nodemon": "^2.0.16",
     "pug": "^3.0.2",
-    "qiniu": "^7.6.1"
+    "qiniu": "^7.6.1",
+    "redis": "^4.1.0",
+    "uuid": "^8.3.2"
   }
 }

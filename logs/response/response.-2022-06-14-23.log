@@ -1,0 +1,24 @@
+[2022-06-14T23:54:07.899] [INFO] resLogger - 
+*************** response log start ***************
+request method: GET
+request originalUrl:  /users/userInfo
+request client ip:  ::ffff:127.0.0.1
+request query:  {}
+request time: 4
+response status: 200
+response body: 
+{"code":204,"msg":"cookie已经过期或不存在，请重新登陆！"}
+*************** response log end ***************
+
+[2022-06-14T23:58:20.639] [INFO] resLogger - 
+*************** response log start ***************
+request method: GET
+request originalUrl:  /users/userInfo
+request client ip:  ::ffff:127.0.0.1
+request query:  {}
+request time: 2
+response status: 200
+response body: 
+"获取信息成功！{\"uid\":\"43e2bc0c-931f-4f1f-9b33-e859856dba06\",\"time\":1655221744705,\"msg\":\"后续存入用户信息\"}"
+*************** response log end ***************
+

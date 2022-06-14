@@ -1,51 +1,81 @@
-const Koa = require('koa')
-const app = new Koa()
-const views = require('koa-views')
-const json = require('koa-json')
-const onerror = require('koa-onerror')
-const bodyparser = require('koa-bodyparser')
+const Koa = require('koa');
+const app = new Koa();
+/**
+ * 外包
+ */
+const views = require('koa-views');
+const json = require('koa-json');
+const onerror = require('koa-onerror');
+const bodyparser = require('koa-bodyparser');
 const koaBody = require('koa-body');
-const logger = require('koa-logger')
+const logger = require('koa-logger');
 const cors = require('koa-cors');
-
-const path =  require('path')
-
+const {createClient} = require('redis');
+// const session = require('koa-generic-session');
+/**
+ * 内置模块
+ */
+const path = require('path')
+/**
+ * 配置文件
+ */
+const redisConfig = require("./config/redis");
 const logsUtil = require("./utils/logTolls")
-
+const wyh_redis = require("./utils/redis")
+/**
+ * 路由
+ */
 const index = require('./routes/index')
 const users = require('./routes/users')
 const qiniu = require('./routes/qiniu')
 
+
+
+
+
+
 // error handler
 onerror(app)
-
-app.use(cors());
+// 跨域
+app.use(cors({credentails: true,}));
+// 静态文件解析
+app.use(require('koa-static')(__dirname + '/public'))
+// 页面模板引擎
+app.use(views(__dirname + '/views', {
+    extension: 'pug'
+}))
 // middlewares
 // app.use(bodyparser({
 //     enableTypes:['json', 'form', 'text']
 // }))
-// 直能解析put和post
+// post方法入参处理    直能解析put和post
 app.use(koaBody({
     multipart: true,
     json: true,
     strict: false, //如果启用，则不解析GET，HEAD，DELETE请求，默认为true
 }));
+// 对cookie中sessionid进行加密的秘钥
+// app.keys = ['wyh666.!@#$%^&*']
+// 使用koa-generic-session则不用手动发送cookie，其自动配置了cookie和session的对应关系
+// app.use(session({
+//     cookie: { // 配置cookie
+//         path: '/', // cookie在根路径下的所有路径都有效
+//         maxAge: 1000 * 60 * 60 * 24, // cookie过期时间，单位毫秒
+//         httpOnly: true, // cookie只允许服务端操作
+//     }
+// }))
+// redis实例
+app.use(wyh_redis(redisConfig))
 app.use(json())
 app.use(logger())
-app.use(require('koa-static')(__dirname + '/public'))
-
-app.use(views(__dirname + '/views', {
-    extension: 'pug'
-}))
-
-// logger
+// logger-控制台打印
 app.use(async (ctx, next) => {
     const start = new Date()
     await next()
     const ms = new Date() - start
     console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
 })
-
+// 日志收集
 app.use(async (ctx, next) => {
     const start = new Date();					          // 开始时间
     let intervals;								              // 间隔时间
@@ -61,6 +91,8 @@ app.use(async (ctx, next) => {
 });
 
 
+
+
 // routes
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
@@ -70,5 +102,4 @@ app.use(qiniu.routes(), qiniu.allowedMethods())
 app.on('error', (err, ctx) => {
     console.error('server error', err, ctx)
 });
-
 module.exports = app

@@ -1,0 +1,28 @@
+[2022-06-14T17:52:46.625] [ERROR] errorLogger - 
+*************** error log start ***************
+request method: GET
+request originalUrl:  /users/bar
+request client ip:  ::ffff:127.0.0.1
+request query:  {}
+request time: 0
+err name: ReferenceError
+err message: Cannot access 'val' before initialization
+err stack: ReferenceError: Cannot access 'val' before initialization
+    at exports.getCookie (D:\project self\object-storage\utils\cookieTools.js:21:36)
+    at D:\project self\object-storage\routes\users.js:18:49
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+    at D:\project self\object-storage\node_modules\koa-router\lib\router.js:372:16
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+    at D:\project self\object-storage\node_modules\koa-compose\index.js:34:12
+    at dispatch (D:\project self\object-storage\node_modules\koa-router\lib\router.js:377:31)
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+    at dispatch (D:\project self\object-storage\node_modules\koa-router\lib\router.js:353:32)
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+    at D:\project self\object-storage\app.js:83:15
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+    at D:\project self\object-storage\app.js:74:11
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+    at logger (D:\project self\object-storage\node_modules\koa-logger\index.js:67:13)
+    at dispatch (D:\project self\object-storage\node_modules\koa-compose\index.js:42:32)
+*************** error log end ***************
+
