@@ -10,7 +10,6 @@ const bodyparser = require('koa-bodyparser');
 const koaBody = require('koa-body');
 const logger = require('koa-logger');
 const cors = require('koa-cors');
-const {createClient} = require('redis');
 // const session = require('koa-generic-session');
 /**
  * 内置模块
@@ -29,7 +28,7 @@ const index = require('./routes/index')
 const users = require('./routes/users')
 const qiniu = require('./routes/qiniu')
 
-
+logsUtil.logHandle("666666")
 
 
 

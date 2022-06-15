@@ -23,9 +23,6 @@ module.exports = function (opts) {
             console.log('Redis 连接已被关闭')
         })
         client.connect();
-        // await client.set('key', '哦豁噢噢噢噢');
-        // const value = await client.get('key');
-        // console.log(11, value)
     } catch (e) {
         console.log('redis连接失败了', e)
         client = null
