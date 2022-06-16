@@ -75,7 +75,7 @@ app.use(users.routes(), users.allowedMethods())
 app.use(qiniu.routes(), qiniu.allowedMethods())
 
 // 自动同步近3分钟的日志入库
-logAutoSync.getFileData(resolve(__dirname, './logs'), 1000 * 3)
+logAutoSync.getFileData(resolve(__dirname, './logs'), 1000 * 60* 3)
 // error-handling
 app.on('error', (err, ctx) => {
     console.error('server error', err, ctx)
