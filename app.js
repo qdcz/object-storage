@@ -14,7 +14,7 @@ const cors = require('koa-cors');
 /**
  * 内置模块
  */
-const path = require('path')
+const {resolve} = require('path')
 /**
  * 配置文件
  */
@@ -27,10 +27,10 @@ const wyh_redis = require("./utils/redis")
 const index = require('./routes/index')
 const users = require('./routes/users')
 const qiniu = require('./routes/qiniu')
-
-logsUtil.logHandle("666666")
-
-
+/**
+ * 初始化事件
+ */
+const logAutoSync = require("./utils/toolFuntion")
 
 
 // error handler
@@ -64,39 +64,18 @@ app.use(koaBody({
 //     }
 // }))
 // redis实例
-app.use(wyh_redis(redisConfig))
+// app.use(wyh_redis(redisConfig))
 app.use(json())
 app.use(logger())
-// logger-控制台打印
-app.use(async (ctx, next) => {
-    const start = new Date()
-    await next()
-    const ms = new Date() - start
-    console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-})
 // 日志收集
-app.use(async (ctx, next) => {
-    const start = new Date();					          // 开始时间
-    let intervals;								              // 间隔时间
-    try {
-        await next();
-        intervals = new Date() - start;
-        logsUtil.logRequest(ctx, intervals);  // 记录请求日志
-        logsUtil.logResponse(ctx, intervals);	  //记录响应日志
-    } catch (error) {
-        intervals = new Date() - start;
-        logsUtil.logError(ctx, error, intervals);//记录异常日志
-    }
-});
-
-
-
-
+app.use(logsUtil.apiLog);
 // routes
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
 app.use(qiniu.routes(), qiniu.allowedMethods())
 
+// 自动同步近3分钟的日志入库
+logAutoSync.getFileData(resolve(__dirname, './logs'), 1000 * 3)
 // error-handling
 app.on('error', (err, ctx) => {
     console.error('server error', err, ctx)

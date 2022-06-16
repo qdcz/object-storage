@@ -1,4 +1,5 @@
 const {createClient} = require('redis');
+const {logSystem} = require("../utils/logTolls")
 
 module.exports = function (opts) {
     let client = null;
@@ -12,19 +13,21 @@ module.exports = function (opts) {
         client = createClient({
             url: `redis://${opts.username}:${opts.password}@${opts.host}:${opts.port}`
         });
-        client.on('error', (err) => console.log('Redis Client Error', err));
+        client.on('error', (err) => {
+            logSystem('Redis 连接失败', 'info')
+        });
         client.on('ready', () => {
-            console.log('Redis 连接成功')
+            logSystem('Redis 连接成功', 'info')
         })
         client.on('reconnecting', (delay, attempt) => {
-            console.log('Redis 断线重连中...', delay)
+            logSystem('Redis 断线重连中...', 'info')
         })
         client.on('end', () => {
-            console.log('Redis 连接已被关闭')
+            logSystem('Redis 连接已被关闭', 'info')
         })
         client.connect();
     } catch (e) {
-        console.log('redis连接失败了', e)
+        logSystem('redis连接失败了' + e, 'error')
         client = null
         return (ctx, next) => next()
     }
@@ -33,7 +36,7 @@ module.exports = function (opts) {
             ctx.redis = client;
             await next()
         } else {
-            ctx.body = {msg: "redis异常", code: "500"}
+            ctx.body = {msg: "redis实例初始化异常", code: "500"}
         }
     }
 }
