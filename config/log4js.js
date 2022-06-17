@@ -34,14 +34,15 @@ module.exports = {
                 "separator": ",",
             }
         },
-        "resLogger": {
+        // 接口请求日志
+        "api": {
             "type": "file",
-            "filename": baseLogPath + '/response/response',
+            "filename": baseLogPath + '/api/api',
             "pattern": "yyyy-MM-dd~hh-mm.log",
             "alwaysIncludePattern": true,
             "encoding": "utf-8",
             // "numBackups": 3,
-            "path": '/response',
+            "path": '/api',
             "layout": {
                 "type": "json",
                 "separator": ",",
@@ -59,27 +60,12 @@ module.exports = {
                 "type": "json",
                 "separator": ",",
             }
-        },
-        // 请求日志
-        'reqLogger': {
-            "type": 'file', // 日志类型
-            "filename": baseLogPath + '/request/request',
-            "pattern": 'yyyy-MM-dd~hh-mm.log', // 后缀
-            "alwaysIncludePattern": true, // 上面两个参数是否合并
-            "encoding": 'utf-8', // 编码格式
-            // "maxLogSize": 1000, // 最大存储内容
-            "path": '/request',
-            "layout": {
-                "type": "json",
-                "separator": ",",
-            }
-        },
+        }
     },
     // 分类以及日志等级
     categories: {
-        "reqLogger": {"appenders": ['reqLogger'], "level": 'info'},
         "default": {"appenders": ["rule-console"], "level": "all"},
-        "resLogger": {"appenders": ["resLogger"], "level": "info"},
+        "apiLogger": {"appenders": ["api"], "level": "info"},
         "errorLogger": {"appenders": ["errorLogger"], "level": "error"},
         "handleLogger": {"appenders": ["handleLogger"], "level": "all"},
         "systemLogger": {"appenders": ['rule-console', "system"], "level": "all"}

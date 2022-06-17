@@ -1,6 +1,7 @@
 const log4js = require('log4js');
 const logsConfig = require('../config/log4js');
 const uuid = require("uuid");
+const {log} = require("debug");
 // 设置日志自定义布局为json格式
 log4js.addLayout('json', function (config) {
     return function (logEvent) {
@@ -10,8 +11,7 @@ log4js.addLayout('json', function (config) {
 //加载配置文件
 log4js.configure(logsConfig);
 //调用预先定义的日志名称
-var reqLogger = log4js.getLogger("reqLogger");
-var resLogger = log4js.getLogger("resLogger");
+var apiLogger = log4js.getLogger("apiLogger");
 var errorLogger = log4js.getLogger("errorLogger");
 var handleLogger = log4js.getLogger("handleLogger");
 var systemLogger = log4js.getLogger("systemLogger");
@@ -63,9 +63,7 @@ const formatText = {
      * @returns {String}
      */
     system: function (info) {
-        let logText = new String();
-        logText += "info log: " + info + "---";
-        return logText;
+        return info;
     },
     /**
      * 请求日志打印
@@ -73,7 +71,7 @@ const formatText = {
      * @param uuid
      * @returns {String}
      */
-    request: function (ctx, uuid) {
+    request: function (ctx, uuid, intervals) {
         let logText = new String();
         let method = ctx.req.method,
             url = ctx.url,
@@ -81,13 +79,24 @@ const formatText = {
             ip = ctx.req.ip,
             query = ctx.req.query,
             body = ctx.req.body;
-        logText += "request url: " + url + "---";
-        logText += "request uuid: " + uuid + "---";
-        logText += "request method: " + method + "---";
-        logText += "request client remoteAddress: " + remoteAddress + "---";
-        logText += "request query:  " + JSON.stringify(query) + "---";
-        logText += "request body: " + JSON.stringify(body) + "---";
-        return logText;
+        // logText += "requestUrl:" + `"${url}",`;
+        // logText += "requestUuid:" + `"${uuid}",`;
+        // logText += "requestMethod:" + `"${method}",`;
+        // logText += "requestClientRemoteAddress:" + `"${remoteAddress}",`;
+        // logText += "requestQuery:" + JSON.stringify(query) + ",";
+        // logText += "requestBody:" + JSON.stringify(body) + ",";
+        return {
+            requestUrl: url,
+            requestUuid: uuid,
+            requestMethod: method,
+            requestClientRemoteAddress: remoteAddress,
+            requestQuery: query,
+            requestBody: body,
+
+            responseStatus: ctx.status,
+            requestTime: intervals,
+            responseBody: ctx.body,
+        }
     },
     /**
      * 响应日志打印
@@ -96,13 +105,17 @@ const formatText = {
      * @param uuid
      * @returns {String}
      */
-    response: function (ctx, intervals, uuid) {
-        let logText = new String();
-        logText += "request uuid: " + uuid + "---"; //响应uuid
-        logText += "response status: " + ctx.status + "---"; //响应状态码
-        logText += "request time: " + intervals + "---"; //服务器响应时间
-        logText += "response body: " + JSON.stringify(ctx.body) + "---"; //响应内容
-        return logText;
+    response: function (ctx, intervals) {
+        // let logText = new String();
+        // logText += "responseStatus:" + `"${ctx.status}",`; //响应状态码
+        // logText += "requestTime:" + `"${intervals}",`; //服务器响应时间
+        // logText += "responseBody:" + JSON.stringify(ctx.body) + ","; //响应内容
+        // return logText;
+        return {
+            responseStatus: ctx.status,
+            requestTime: intervals,
+            responseBody: ctx.body,
+        }
     },
 }
 
@@ -153,8 +166,11 @@ module.exports = {
         try {
             await next();
             intervals = new Date() - start;
-            reqLogger.info(formatText.request(ctx, uid));
-            resLogger.info(formatText.response(ctx, intervals, uid));
+            // reqLogger.info(formatText.request(ctx, uid));
+            // resLogger.info(formatText.response(ctx, intervals, uid));
+            let logInfo = formatText.request(ctx, uid, intervals)
+            // logInfo = logInfo.slice(0, -1)
+            apiLogger.info(JSON.stringify(logInfo))
         } catch (error) {
             intervals = new Date() - start;
             errorLogger.error(formatText.error(ctx, error, intervals));

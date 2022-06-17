@@ -19,18 +19,22 @@ const {resolve} = require('path')
  * 配置文件
  */
 const redisConfig = require("./config/redis");
-const logsUtil = require("./utils/logTolls")
-const wyh_redis = require("./utils/redis")
+const logsUtil = require("./utils/logTolls");
 /**
  * 路由
  */
-const index = require('./routes/index')
-const users = require('./routes/users')
-const qiniu = require('./routes/qiniu')
+const index = require('./routes/index');
+const users = require('./routes/users');
+const qiniu = require('./routes/qiniu');
 /**
  * 初始化事件
  */
-const logAutoSync = require("./utils/toolFuntion")
+const logAutoSync = require("./utils/toolFuntion");
+/**
+ * 数据库
+ */
+const wyh_redis = require("./utils/redis");
+const mongo = require("./utils/mongodb");
 
 
 // error handler
