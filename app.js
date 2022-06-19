@@ -29,7 +29,7 @@ const qiniu = require('./routes/qiniu');
 /**
  * 初始化事件
  */
-const logAutoSync = require("./utils/toolFuntion");
+const tools = require("./utils/toolFuntion");
 /**
  * 数据库
  */
@@ -79,8 +79,8 @@ app.use(users.routes(), users.allowedMethods())
 app.use(qiniu.routes(), qiniu.allowedMethods())
 
 // 自动同步近3分钟的日志入库
-logAutoSync.getFileData(resolve(__dirname, './logs'), 1000 * 60* 3)
-// error-handling
+tools.logAutoSync(resolve(__dirname, './logs'), 1000 * 60* 3);
+
 app.on('error', (err, ctx) => {
     console.error('control error', err, ctx)
 });

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 
 // 日志表数据建模
-const loggerSchema = new mongoose.Schema({
+const logSchema = new mongoose.Schema({
     startTime: Date, // 开始时间
     uuid: String, // uuid
     logType: String,  // 日志类型
@@ -27,4 +27,4 @@ const loggerSchema = new mongoose.Schema({
     responseSpeed: Number // 响应时间(单位s)
 });
 
-module.exports = loggerSchema
+module.exports = logSchema

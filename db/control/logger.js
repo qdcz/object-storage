@@ -1,11 +1,19 @@
-const {loggerModel} = require("../model");
+const {logModel} = require("../model");
 const {logSystem} = require('../../utils/logTolls')
 
+
+class logger {
+    constructor() {
+
+    }
+
+}
+// logModel = new proxy(logModel)
 
 // 添加一条数据
 const add = function (arg) {
     return new Promise((res, rej) => {
-        let _logger = new loggerModel({
+        let _logger = new logModel({
             uuid: 'String',
             // url: 'String',
             // method: 'String',
@@ -33,7 +41,7 @@ const add = function (arg) {
 // 查询数据
 const selectById = async function (id) {
     return new Promise((res, rej) => {
-        loggerModel.findById(id, (err, data) => {
+        logModel.findById(id, (err, data) => {
             if (err) {
                 logSystem(err, 'error');
                 rej(err)
@@ -49,7 +57,7 @@ const selectById = async function (id) {
 // 添加多条数据
 const addMany = function (list) {
     return new Promise((res, rej) => {
-        loggerModel.insertMany(list, (err, docs) => {
+        logModel.insertMany(list, (err, docs) => {
             if (err) {
                 logSystem(err, 'error');
                 rej(err)
@@ -65,7 +73,7 @@ const addMany = function (list) {
 // 删除当前文档的所有数据
 const deleteCurrentDoc = function () {
     return new Promise((res, rej) => {
-        loggerModel.remove(function (err, docs) {
+        logModel.remove(function (err, docs) {
             if (err) {
                 logSystem(err, 'error');
                 rej(err)

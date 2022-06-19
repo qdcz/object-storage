@@ -1,8 +1,8 @@
-const {resolve, basename, join} = require('path')
+const {resolve, join} = require('path')
 const fs = require("fs");
 const {Buffer} = require('buffer');
 const uid = require("uuid");
-const loggerModel = require("../db/control/logger")
+const logModel = require("../db/control/logger")
 /**
  * 思路
  *
@@ -20,19 +20,17 @@ const loggerModel = require("../db/control/logger")
 
 
 /**
- *
- * @param prefixDir 目前前缀
+ *  自动同步文件到数据库
+ * @param prefixDir 目录前缀
  * @param time      设置自动同步日志的时间频率 单位s
  */
-const getFileData = function (prefixDir, time) {
-    let jsonData = [];
-
-
-    let timeThreshold = 1000 * 60 * 20000;  // 时间阈值 取前两分钟的所有日志文件
+const logAutoSync = function (prefixDir, time) {
+    let timeThreshold = 1000 * 60 * 2;  // 时间阈值 取前两分钟的所有日志文件
     const run = async function () {
-        prefixDir = prefixDir || resolve(__dirname, '../logs');
+        prefixDir = prefixDir || resolve(__dirname, '../logs'); // 目录前缀
         const syncFileLogList = ['api', 'system']; // 需要同步的本地日志二级目录
-        let needSyncLogFilePath = []; // 需要同步的日志文件
+        let needSyncLogFilePath = []; // 需要同步的日志文件列表
+
         // 先遍历指定目录下的日志文件
         for (let i = 0; i < syncFileLogList.length; i++) {
             let dirName = syncFileLogList[i];
@@ -43,7 +41,7 @@ const getFileData = function (prefixDir, time) {
                 let hhmmss = timeOfFileName[1].replace("-", ":") + ":00";             // 23:57:00
                 let YYMMDDhhmmss = YYMMDD + " " + hhmmss;                            // 2022-06-17 00:31:00
                 let timeGap = Date.now() - new Date(YYMMDDhhmmss).getTime()          // 时间差
-                if (timeGap < timeThreshold) { // 只取范围内的时间文件
+                if (timeGap > timeThreshold) { // 只取范围外的时间(日志)文件
                     return join(prefixDir, join(`/${dirName}`, `/${v}`))
                 }
                 return null
@@ -52,16 +50,9 @@ const getFileData = function (prefixDir, time) {
         }
         console.log('needSyncLogFilePath', needSyncLogFilePath)
 
-        // fs.readFile(resolve(__dirname),(err,file)=>{
-        //     console.log(file,resolve(__dirname),prefixDir)
-        // })
 
-
-
-        let targetData_restfulApi = [];  // api接口请求日志
-        let targetData_system = [];      // system系统请求日志
+        let targetData = [];  // api接口请求日志
         // 遍历数组 顺序入库：
-        // needSyncLogFilePath
         for (let index = 0; index < needSyncLogFilePath.length; index++) {
             let fileName = needSyncLogFilePath[index];
             const file = await fs.readFileSync(fileName);
@@ -71,47 +62,31 @@ const getFileData = function (prefixDir, time) {
             if (fileContent.length > 0) {
                 // console.log('日志文件下的数据列表', fileContent)
 
+
+
                 // 对数据进行处理成想要的数据格式
-
                 fileContent.forEach(item => {
-
-                    // 对data数据进行处理
-                    if (item.categoryName === 'systemLogger') { // 系统运行级别的日志打印文本处理
-                        targetData_system.push({
-                            startTime: item.startTime,
-                            uuid: uid.v4(),
-                            logLevel:  item.level.levelStr, // 日志等级
-                            data: item.data[0]
-                        })
-                    } else if (item.categoryName === 'apiLogger') { // restfulApi 日志文本处理
-                        let da = JSON.parse(item.data[0])
-                        let infoObj = {
-                            startTime: item.startTime,
-                            uuid: uid.v4(),
-                            url: da.requestUrl,
-                            method: da.requestMethod,
-                            remoteAddress: da.requestClientRemoteAddress,
-                            query: da.requestQuery,
-                            body: da.requestBody,
-                            status: da.responseStatus,
-                            responseData: da.responseBody,
-                            responseSpeed: Number(da.requestTime), // (单位s)
-                            logType: item.categoryName,  // 日志类型
-                            logLevel: item.level.levelStr // 日志等级
-                        };
-                        targetData_restfulApi.push(da)
+                    let arr = dataProcessForLogCategory(item)
+                    if (arr) {
+                        targetData.push(arr);
                     }
-                    // item.data[0]
-
-
                 })
             }
         }
 
         // 将指定数据存到数据库中
-        // console.log('将指定数据存到数据库中',targetData_restfulApi,targetData_system)
-        saveLogToDataBase(targetData_restfulApi)
-        saveLogToDataBase(targetData_system)
+        let res = saveLogToDataBase(targetData);
+        if(!res){
+            return console.log("数据同步到库失败！");
+        }
+        // 清楚掉已经同步完成的文件
+        needSyncLogFilePath.forEach(item=>{
+            fs.unlink(item,(err)=>{
+                if(err){
+                    console.log('文件删除失败',err,item)
+                }
+            })
+        })
 
     }
     run().then(r => {
@@ -122,20 +97,66 @@ const getFileData = function (prefixDir, time) {
 }
 
 
+// 对日志文件中的数据 按类别处理并归类
+const dataProcessForLogCategory = function (data) {
+    const fieldMapPolicy = {
+        'systemLogger': function (item) {
+            return {
+                startTime: item.startTime,
+                uuid: uid.v4(),
+                logLevel: item.level.levelStr, // 日志等级
+                data: item.data[0]
+            }
+        },
+        'apiLogger': function (item) {
+            let da = JSON.parse(item.data[0])
+            return {
+                startTime: item.startTime,
+                uuid: uid.v4(),
+                url: da.requestUrl,
+                method: da.requestMethod,
+                remoteAddress: da.requestClientRemoteAddress,
+                query: da.requestQuery,
+                body: da.requestBody,
+                status: da.responseStatus,
+                responseData: da.responseBody ? JSON.stringify(da.responseBody) : "",
+                responseSpeed: Number(da.requestTime), // (单位s)
+                logType: item.categoryName,  // 日志类型
+                logLevel: item.level.levelStr // 日志等级
+            }
+        },
+    }
+    let executeFn = fieldMapPolicy[data.categoryName];
+    if (executeFn) {
+        return executeFn(data)
+    }
+    return null
+}
+
+
 /**
  * 将数据存入到数据库中
  * @param $document   文档(表)
  * @param $data       数据集合
  */
-const saveLogToDataBase = async function ($data){
-    if(Array.isArray($data)){
-        let res = await loggerModel.addMany($data);
-        console.log(666,res);
-    }else{
-        let res = loggerModel.add($data);
+const saveLogToDataBase = async function ($data) {
+    try{
+        let res = null
+        if (!$data) return console.error("$data不能为空");
+        if (Array.isArray($data)) {
+            if ($data.length == 0) return console.error("$data不能为空")
+            res = await logModel.addMany($data);
+        } else {
+            res = await logModel.add($data);
+        }
+        return res
+    }catch(e){
+        console.log('saveLogToDataBase错误',e)
+        return null
     }
 }
 
+
 module.exports = {
-    getFileData
+    logAutoSync
 }

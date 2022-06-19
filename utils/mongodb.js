@@ -18,7 +18,7 @@ async function main() {
 
 
     // 批量清除数据库的数据
-    db_logger.deleteCurrentDoc()
+    // db_logger.deleteCurrentDoc()
 }
 
 main().catch(err => {
