@@ -82,6 +82,6 @@ app.use(qiniu.routes(), qiniu.allowedMethods())
 logAutoSync.getFileData(resolve(__dirname, './logs'), 1000 * 60* 3)
 // error-handling
 app.on('error', (err, ctx) => {
-    console.error('server error', err, ctx)
+    console.error('control error', err, ctx)
 });
 module.exports = app

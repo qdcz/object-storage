@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 const app = require('../app');
-let debug = require('debug')('demo:server');
+let debug = require('debug')('demo:control');
 const http = require('http');
 
 /**
@@ -14,7 +14,7 @@ const port = normalizePort(process.env.PORT || '5302');
 // app.set('port', port);
 
 /**
- * Create HTTP server.
+ * Create HTTP control.
  */
 let server = http.createServer(app.callback());
 
@@ -47,7 +47,7 @@ function normalizePort(val) {
 }
 
 /**
- * Event listener for HTTP server "error" event.
+ * Event listener for HTTP control "error" event.
  */
 
 function onError(error) {
@@ -75,7 +75,7 @@ function onError(error) {
 }
 
 /**
- * Event listener for HTTP server "listening" event.
+ * Event listener for HTTP control "listening" event.
  */
 
 function onListening() {

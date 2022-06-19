@@ -1,9 +1,5 @@
-const loggerSchema = require("../schema/logger");
-const mongoose = require('mongoose');
-const loggerModel = mongoose.model('logger', loggerSchema);  // 建立一个日志文档
-
+const {loggerModel} = require("../model");
 const {logSystem} = require('../../utils/logTolls')
-const {json} = require("formidable/src/plugins");
 
 
 // 添加一条数据
@@ -49,7 +45,45 @@ const selectById = async function (id) {
         });
     })
 }
+
+// 添加多条数据
+const addMany = function (list) {
+    return new Promise((res, rej) => {
+        loggerModel.insertMany(list, (err, docs) => {
+            if (err) {
+                logSystem(err, 'error');
+                rej(err)
+                return
+            }
+            const resData = {dbCode: 200, msg: "数据批量插入成功!", docs};
+            res(resData);
+            logSystem(JSON.stringify(resData));
+        });
+    })
+}
+
+// 删除当前文档的所有数据
+const deleteCurrentDoc = function () {
+    return new Promise((res, rej) => {
+        loggerModel.remove(function (err, docs) {
+            if (err) {
+                logSystem(err, 'error');
+                rej(err)
+                return
+            }
+            const resData = {dbCode: 200, msg: "清楚文档成功!", docs};
+            res(resData);
+            logSystem(JSON.stringify(resData));
+        })
+    })
+
+}
+
+// 删除一条数据
+// 修改数据
 module.exports = {
     add,
+    addMany,
+    deleteCurrentDoc,
     selectById,
 }

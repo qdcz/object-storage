@@ -48,14 +48,14 @@ module.exports = {
                 "separator": ",",
             }
         },
-        "handleLogger": {
+        // 数据库操作日志
+        "dbHandle": {
             "type": "file",
-            "filename": baseLogPath + '/handle/handle',
+            "filename": baseLogPath + '/dbHandle/dbHandle',
             "pattern": "yyyy-MM-dd~hh-mm.log",
             "alwaysIncludePattern": true,
             "encoding": "utf-8",
-            // "numBackups": 3,
-            "path": '/handle',
+            "path": '/dbHandle',
             "layout": {
                 "type": "json",
                 "separator": ",",
@@ -67,8 +67,8 @@ module.exports = {
         "default": {"appenders": ["rule-console"], "level": "all"},
         "apiLogger": {"appenders": ["api"], "level": "info"},
         "errorLogger": {"appenders": ["errorLogger"], "level": "error"},
-        "handleLogger": {"appenders": ["handleLogger"], "level": "all"},
-        "systemLogger": {"appenders": ['rule-console', "system"], "level": "all"}
+        "dbHandleLogger": {"appenders": ["dbHandle"], "level": "all"},
+        "systemLogger": {"appenders": ["system"], "level": "all"}
     },
     "baseLogPath": baseLogPath
 }

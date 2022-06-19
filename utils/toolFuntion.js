@@ -1,8 +1,8 @@
 const {resolve, basename, join} = require('path')
 const fs = require("fs");
-const {path} = require('../config/cookie');
 const {Buffer} = require('buffer');
-const uid = require("uuid")
+const uid = require("uuid");
+const loggerModel = require("../db/control/logger")
 /**
  * 思路
  *
@@ -28,7 +28,7 @@ const getFileData = function (prefixDir, time) {
     let jsonData = [];
 
 
-    let timeThreshold = 1000 * 60 * 200;  // 时间阈值 取前两分钟的所有日志文件
+    let timeThreshold = 1000 * 60 * 20000;  // 时间阈值 取前两分钟的所有日志文件
     const run = async function () {
         prefixDir = prefixDir || resolve(__dirname, '../logs');
         const syncFileLogList = ['api', 'system']; // 需要同步的本地日志二级目录
@@ -56,6 +56,10 @@ const getFileData = function (prefixDir, time) {
         //     console.log(file,resolve(__dirname),prefixDir)
         // })
 
+
+
+        let targetData_restfulApi = [];  // api接口请求日志
+        let targetData_system = [];      // system系统请求日志
         // 遍历数组 顺序入库：
         // needSyncLogFilePath
         for (let index = 0; index < needSyncLogFilePath.length; index++) {
@@ -68,8 +72,7 @@ const getFileData = function (prefixDir, time) {
                 // console.log('日志文件下的数据列表', fileContent)
 
                 // 对数据进行处理成想要的数据格式
-                let targetData_restfulApi = [];
-                let targetData_system = [];
+
                 fileContent.forEach(item => {
 
                     // 对data数据进行处理
@@ -77,12 +80,11 @@ const getFileData = function (prefixDir, time) {
                         targetData_system.push({
                             startTime: item.startTime,
                             uuid: uid.v4(),
-                            logLevel: item.levelStr, // 日志等级
+                            logLevel:  item.level.levelStr, // 日志等级
                             data: item.data[0]
                         })
                     } else if (item.categoryName === 'apiLogger') { // restfulApi 日志文本处理
                         let da = JSON.parse(item.data[0])
-                        console.log(666,da)
                         let infoObj = {
                             startTime: item.startTime,
                             uuid: uid.v4(),
@@ -90,29 +92,48 @@ const getFileData = function (prefixDir, time) {
                             method: da.requestMethod,
                             remoteAddress: da.requestClientRemoteAddress,
                             query: da.requestQuery,
-                            body:da.requestBody,
+                            body: da.requestBody,
                             status: da.responseStatus,
-                            responseData: da.requestMethod,
-                            responseSpeed: da.requestTime, // (单位s)
+                            responseData: da.responseBody,
+                            responseSpeed: Number(da.requestTime), // (单位s)
                             logType: item.categoryName,  // 日志类型
-                            // responseBody:
-                            logLevel: undefined // 日志等级
+                            logLevel: item.level.levelStr // 日志等级
                         };
+                        targetData_restfulApi.push(da)
                     }
                     // item.data[0]
 
 
                 })
-
-
             }
         }
+
+        // 将指定数据存到数据库中
+        // console.log('将指定数据存到数据库中',targetData_restfulApi,targetData_system)
+        saveLogToDataBase(targetData_restfulApi)
+        saveLogToDataBase(targetData_system)
+
     }
     run().then(r => {
     })
 
     // 要上个锁 不能这么玩，在前置操作没执行完之前不允许下一次同步
     setInterval(run, time)
+}
+
+
+/**
+ * 将数据存入到数据库中
+ * @param $document   文档(表)
+ * @param $data       数据集合
+ */
+const saveLogToDataBase = async function ($data){
+    if(Array.isArray($data)){
+        let res = await loggerModel.addMany($data);
+        console.log(666,res);
+    }else{
+        let res = loggerModel.add($data);
+    }
 }
 
 module.exports = {
