@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-
-
 // 日志表数据建模
 const logSchema = new mongoose.Schema({
     startTime: Date, // 开始时间
@@ -20,11 +18,13 @@ const logSchema = new mongoose.Schema({
      */
     url: String,  // 请求路径
     method: String, // 请求方法
-    remoteAddress: String, // 请求地址
+    remoteAddress: String, // 请求地址   入参+个接口调用方
     query: String, // 请求query入参
     status: String, // 响应状态
     responseData: String, // 响应数据
     responseSpeed: Number // 响应时间(单位s)
+
+
 });
 
 module.exports = logSchema

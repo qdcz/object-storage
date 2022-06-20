@@ -134,6 +134,7 @@ router.post('/privateFileDownloadLink', async function (ctx, next) {
  * 查询所有的文件列表
  */
 router.get('/selFileList', async function (ctx, next) {
+    // console.log(bbb)
     let {prefixFilePath, limit, bucket} = ctx.request.query;
     let res = await qiniu.selFileList({
         prefix: prefixFilePath || "", limit: limit || 20

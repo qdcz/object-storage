@@ -14,12 +14,12 @@ const cors = require('koa-cors');
 /**
  * 内置模块
  */
-const {resolve} = require('path')
+const {resolve} = require('path');
 /**
  * 配置文件
  */
 const redisConfig = require("./config/redis");
-const logsUtil = require("./utils/logTolls");
+const apiLog = require("./utils/apiLog");
 /**
  * 路由
  */
@@ -27,15 +27,18 @@ const index = require('./routes/index');
 const users = require('./routes/users');
 const qiniu = require('./routes/qiniu');
 /**
- * 初始化事件
+ * 附加处理
  */
-const tools = require("./utils/toolFuntion");
+const logAutoSync = require("./utils/autoSyncLocalLogFile");
+/**
+ * 全局事件监听执行
+ */
+const EventStack = require("./utils/events");  // 引入即可
 /**
  * 数据库
  */
-const wyh_redis = require("./utils/redis");
-const mongo = require("./utils/mongodb");
-
+// const wyh_redis = require("./utils/redis");
+const mongodb = require("./utils/mongodb");
 
 // error handler
 onerror(app)
@@ -69,17 +72,23 @@ app.use(koaBody({
 // }))
 // redis实例
 // app.use(wyh_redis(redisConfig))
+// 建立mongodb连接
+app.use(mongodb())
 app.use(json())
 app.use(logger())
-// 日志收集
-app.use(logsUtil.apiLog);
+// 接口日志收集
+app.use(apiLog());
 // routes
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
 app.use(qiniu.routes(), qiniu.allowedMethods())
 
-// 自动同步近3分钟的日志入库
-tools.logAutoSync(resolve(__dirname, './logs'), 1000 * 60* 3);
+// 自动同步【自定义分钟】前的日志入库
+logAutoSync({
+    prefixDir: resolve(__dirname, './logs'), // 路径前缀
+    timeThreshold: 1000 * 60 * 3, // 同步频率和同步时间范围  当前时间往前推自定义分钟数的所有文件
+    syncFileLogList: ['api', 'system'], // 需要同步的本地日志二级目录
+});
 
 app.on('error', (err, ctx) => {
     console.error('control error', err, ctx)

@@ -1,30 +1,19 @@
 const {logModel} = require("../model");
-const {logSystem} = require('../../utils/logTolls')
+const {logSystem} = require('../../utils/logTolls');
 
+// class logger {
+//     constructor() {
+//
+//     }
+//
+// }
 
-class logger {
-    constructor() {
-
-    }
-
-}
 // logModel = new proxy(logModel)
 
 // 添加一条数据
-const add = function (arg) {
+const add = function (data) {
     return new Promise((res, rej) => {
-        let _logger = new logModel({
-            uuid: 'String',
-            // url: 'String',
-            // method: 'String',
-            // remoteAddress: 'String',
-            // query: 'String',
-            // status: 'String',
-            // responeData: 'String',
-            // responseSpeed: 2, // (单位s)
-            // logType: 'String',  // 日志类型
-            // logLevel: 2 // 日志等级
-        })
+        let _logger = new logModel(data)
         _logger.save((err, data) => {
             if (err) {
                 logSystem(err, 'error');
@@ -73,13 +62,23 @@ const addMany = function (list) {
 // 删除当前文档的所有数据
 const deleteCurrentDoc = function () {
     return new Promise((res, rej) => {
-        logModel.remove(function (err, docs) {
+        // logModel.remove(function (err, docs) {
+        //     if (err) {
+        //         logSystem(err, 'error');
+        //         rej(err)
+        //         return
+        //     }
+        //     const resData = {dbCode: 200, msg: "清楚文档成功!", docs};
+        //     res(resData);
+        //     logSystem(JSON.stringify(resData));
+        // })
+        logModel.deleteMany({uuid: {$ne: "test"}}, function (err, docs) {
             if (err) {
                 logSystem(err, 'error');
                 rej(err)
                 return
             }
-            const resData = {dbCode: 200, msg: "清楚文档成功!", docs};
+            const resData = {dbCode: 200, msg: "清除文档成功!", docs};
             res(resData);
             logSystem(JSON.stringify(resData));
         })

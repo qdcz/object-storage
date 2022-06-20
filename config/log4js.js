@@ -1,9 +1,9 @@
 const path = require('path');
-
 //日志保存的根目录
 const baseLogPath = path.resolve(__dirname, '../logs');
 
 module.exports = {
+    "baseLogPath": baseLogPath,
     //日志格式等设置
     appenders: {
         "rule-console": {"type": "console"},
@@ -70,5 +70,4 @@ module.exports = {
         "dbHandleLogger": {"appenders": ["dbHandle"], "level": "all"},
         "systemLogger": {"appenders": ["system"], "level": "all"}
     },
-    "baseLogPath": baseLogPath
 }
