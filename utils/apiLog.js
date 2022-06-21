@@ -1,8 +1,12 @@
 const uuid = require("uuid");
 const globalConfig = require("../config");
 const tools = require("./tools");
-const {formatText, apiLogger} = require("../utils/logTolls");
+const {formatText} = require("../utils/logTolls");
 const _Emitter = require("./events");
+const log4js = require("log4js");
+const apiLogger = log4js.getLogger("apiLogger");
+
+
 module.exports = function () {
     return async function (ctx, next) {
         let uid = await uuid.v4();
@@ -10,6 +14,8 @@ module.exports = function () {
         let intervals;
         try {
             await next();
+            // 日志查询接口,是不能记录下来的，否者会出现无线套娃，数据量越堆越大。
+            if (ctx.url == '/logs/logList') return
             intervals = new Date() - start;
             let logInfo = formatText.request(ctx, uid, intervals)
 
@@ -33,7 +39,8 @@ module.exports = function () {
         } catch (error) {
             intervals = new Date() - start;
             let logError = formatText.requestError(ctx, uid, error, intervals)
-            apiLogger.error(JSON.stringify(logError));
+            apiLogger.error(JSON.stringify(logError))
+            ctx.body = "接口异常，请联系管理员分析日志" + error
         }
     }
 }

@@ -1,9 +1,9 @@
 const MongoClient = require('mongodb').MongoClient;
 const mongoose = require('mongoose');
-// 简单crud用 orm 快速操作，对于复杂场景也引入了原厂支持的包，可做处理
+// 简单crud用orm快速操作，对于复杂场景也引入了原厂支持的驱动也可做处理
 const {mongooseConfig} = require("../config/mongodb");
 const {logSystem} = require("../utils/logTolls");
-const db_logger = require("../db/control/logger")
+const db_logger = require("../control/logger")
 
 
 async function main() {

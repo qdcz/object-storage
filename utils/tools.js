@@ -19,10 +19,11 @@ module.exports = {
                     url: da.requestUrl,
                     method: da.requestMethod,
                     remoteAddress: da.requestClientRemoteAddress,
-                    query: da.requestQuery,
-                    body: da.requestBody,
+                    requestHref: da.requestHref,
+                    requestQuery: da.requestQuery ? JSON.stringify(da.requestQuery) : "{}",
+                    requestBody: da.requestBody ? JSON.stringify(da.requestBody) : "{}",
                     status: da.responseStatus,
-                    responseData: da.responseBody ? JSON.stringify(da.responseBody) : "",
+                    responseData: da.responseBody ? JSON.stringify(da.responseBody) : "{}",
                     responseSpeed: Number(da.requestTime), // (单位s)
                     logType: item.categoryName,  // 日志类型
                     logLevel: item.level.levelStr // 日志等级

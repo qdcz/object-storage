@@ -1,5 +1,5 @@
 const {EventEmitter} = require('events');
-const logModel = require("../db/control/logger");
+const logModel = require("../control/logger");
 const {logSystem} = require("./logTolls");
 const myEmitter = new EventEmitter();
 

@@ -26,6 +26,7 @@ const apiLog = require("./utils/apiLog");
 const index = require('./routes/index');
 const users = require('./routes/users');
 const qiniu = require('./routes/qiniu');
+const logs = require('./routes/logs');
 /**
  * 附加处理
  */
@@ -82,7 +83,7 @@ app.use(apiLog());
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
 app.use(qiniu.routes(), qiniu.allowedMethods())
-
+app.use(logs.routes(), logs.allowedMethods())
 // 自动同步【自定义分钟】前的日志入库
 logAutoSync({
     prefixDir: resolve(__dirname, './logs'), // 路径前缀

@@ -12,8 +12,8 @@ log4js.addLayout('json', function (config) {
 log4js.configure(logsConfig);
 //调用预先定义的日志名称
 const apiLogger = log4js.getLogger("apiLogger");
-const errorLogger = log4js.getLogger("errorLogger");
-const dbHandleLogger = log4js.getLogger("dbHandleLogger");
+// const errorLogger = log4js.getLogger("errorLogger");
+// const dbHandleLogger = log4js.getLogger("dbHandleLogger");
 const systemLogger = log4js.getLogger("systemLogger");
 const consoleLogger = log4js.getLogger();
 
@@ -43,20 +43,14 @@ const formatText = {
      * @returns {String}
      */
     request: function (ctx, uuid, intervals) {
-        let method = ctx.req.method,
-            url = ctx.url,
-            remoteAddress = (ctx.headers['x-forwarded-for'] || ctx.ip || ctx.ips),
-            ip = ctx.req.ip,
-            query = ctx.req.query,
-            body = ctx.req.body;
-
         return {
-            requestUrl: url,
+            requestUrl: ctx.url,
+            requestHref: ctx.headers['request-href'],
             requestUuid: uuid,
-            requestMethod: method,
-            requestClientRemoteAddress: remoteAddress,
-            requestQuery: query,
-            requestBody: body,
+            requestMethod: ctx.req.method,
+            requestClientRemoteAddress: (ctx.headers['x-forwarded-for'] || ctx.ip || ctx.ips),
+            requestQuery: ctx.request.query,
+            requestBody: ctx.request.body,
 
             responseStatus: ctx.status,
             requestTime: intervals,
@@ -70,7 +64,7 @@ const formatText = {
             data: {
                 // name:err.name,
                 // message:err.message,
-                stack: err.stack
+                stack: err?.stack || err
             }
         })
     }
@@ -116,9 +110,9 @@ module.exports = {
     //     }
     // },
     // 数据库操作日志
-    dbLog: async function (info, type = 'info') {
-        if (info) {
-            dbHandleLogger[type](formatText.dbHandle(info))
-        }
-    }
+    // dbLog: async function (info, type = 'info') {
+    //     if (info) {
+    //         dbHandleLogger[type](formatText.dbHandle(info))
+    //     }
+    // }
 };

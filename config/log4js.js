@@ -66,8 +66,8 @@ module.exports = {
     categories: {
         "default": {"appenders": ["rule-console"], "level": "all"},
         "apiLogger": {"appenders": ["api"], "level": "info"},
-        "errorLogger": {"appenders": ["errorLogger"], "level": "error"},
-        "dbHandleLogger": {"appenders": ["dbHandle"], "level": "all"},
+        // "errorLogger": {"appenders": ["errorLogger"], "level": "error"},
+        // "dbHandleLogger": {"appenders": ["dbHandle"], "level": "all"},
         "systemLogger": {"appenders": ["system"], "level": "all"}
     },
 }

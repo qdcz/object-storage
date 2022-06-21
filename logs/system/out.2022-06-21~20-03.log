@@ -1,0 +1,2 @@
+{"startTime":"2022-06-21T12:03:52.892Z","categoryName":"systemLogger","data":["mongodb数据库连接成功"],"level":{"level":20000,"levelStr":"INFO","colour":"green"},"context":{},"pid":24964},
+{"startTime":"2022-06-21T12:03:56.531Z","categoryName":"systemLogger","data":["mongodb数据库连接成功"],"level":{"level":20000,"levelStr":"INFO","colour":"green"},"context":{},"pid":20864},

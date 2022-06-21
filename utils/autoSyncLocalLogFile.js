@@ -2,7 +2,7 @@ const {resolve, join} = require('path');
 const fs = require("fs");
 const {Buffer} = require('buffer');
 const uid = require("uuid");
-const logModel = require("../db/control/logger");
+const logModel = require("../control/logger");
 const {logSystem} = require("./logTolls");
 const tools = require("./tools");
 /**
@@ -51,7 +51,7 @@ const logAutoSync = function (opt) {
         for (let index = 0; index < needSyncLogFilePath.length; index++) {
             let fileName = needSyncLogFilePath[index];
             const file = await fs.readFileSync(fileName);
-            let fileContent = Buffer.from(file).toString('utf8');
+            let fileContent = Buffer.from(file).toString("utf8");
             fileContent = "[" + fileContent.slice(0, -3) + "]"
             fileContent = JSON.parse(fileContent)
             if (fileContent.length > 0) {

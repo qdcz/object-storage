@@ -19,7 +19,9 @@ const logSchema = new mongoose.Schema({
     url: String,  // 请求路径
     method: String, // 请求方法
     remoteAddress: String, // 请求地址   入参+个接口调用方
-    query: String, // 请求query入参
+    requestHref: String, // 请求路径 www.xxx.com/a/b/c/d.html
+    requestQuery: String, // 请求query入参
+    requestBody: String,   // 请求body 入参
     status: String, // 响应状态
     responseData: String, // 响应数据
     responseSpeed: Number // 响应时间(单位s)
