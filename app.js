@@ -1,7 +1,7 @@
 const Koa = require('koa');
 const app = new Koa();
 /**
- * 外包
+ * 外部包
  */
 const views = require('koa-views');
 const json = require('koa-json');
