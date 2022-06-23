@@ -7,6 +7,7 @@ module.exports = {
                 return {
                     startTime: item.startTime,
                     uuid: uid.v4(),
+                    logType: item.categoryName,  // 日志类型
                     logLevel: item.level.levelStr, // 日志等级
                     data: item.data[0]
                 }
