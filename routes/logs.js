@@ -10,7 +10,7 @@ router.post('/logList', async function (ctx, next) {
     /**
      * 可查询的条件       日期、方法、url、大屏使用方、ip、日志类型（系统、api、数据库操作）、日志等级、响应状态、响应速度
      */
-    let {pageNum = 0, pageSize = 10, startTime, endTime} = ctx.request.body;
+    let {pageNum = 0, pageSize = 10, startTime, endTime, startSpeed, endSpeed} = ctx.request.body;
     let selJson = {}
     let reqBodyArgList = ['logType', 'logLevel', 'method', 'status']; // 多条件查询入参【可选】
     for (let i in reqBodyArgList) {
@@ -22,12 +22,12 @@ router.post('/logList', async function (ctx, next) {
     for (let i in like_reqBodyArgList) {
         ctx.request.body[like_reqBodyArgList[i]] ? like_Json[like_reqBodyArgList[i]] = new RegExp(`${ctx.request.body[like_reqBodyArgList[i]]}`) : ""
     }
-    if (startTime && endTime) { // 处理日期范围查询【可选】
+    if (startTime && endTime) { // 日期范围查询【可选】
         selJson['startTime'] = {$gte: startTime, $lte: endTime}
     }
-    // if (startTime && endTime) { // 处理响应速度范围查询【可选】
-    //     selJson['responseSpeed'] = {$gte: startTime, $lte: endTime}
-    // }
+    if (startSpeed && endSpeed) { // 响应速度范围查询【可选】
+        selJson['responseSpeed'] = {$gte: startSpeed, $lte: endSpeed}
+    }
 
 
     const _filter = Object.assign(selJson, like_Json)
@@ -62,5 +62,11 @@ router.delete('/logList', async function (ctx, next) {
     } else {
         return ctx.body = {code: 200, msg: "数据已被删除或者不存在！",}
     }
+})
+
+// 删除日志文档
+router.delete('/logDocument', async function (ctx, next) {
+    let res = await logger.deleteCurrentDoc();
+    ctx.body = res
 })
 module.exports = router

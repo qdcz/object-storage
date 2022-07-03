@@ -1,0 +1,579 @@
+<html>
+
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <script src="https://unpkg.com/vue@next"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <script src="https://unpkg.com/element-plus"></script>
+    <!-- <script type="text/javascript" src="http://127.0.0.1:8689/cdn/vs/loader.js"></script>
+    <script type="text/javascript" src="http://127.0.0.1:8689/cdn/vs/basic-languages/sql/sql.js"></script> -->
+    <title>日志分析</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-size: 12px !important;
+        }
+
+        .el-table__body {
+            font-size: 10px;
+        }
+
+        /*-------滚动条整体样式----*/
+        .jsonPre::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        /*滚动条里面小方块样式*/
+        .jsonPre::-webkit-scrollbar-thumb {
+            border-radius: 100px;
+            -webkit-box-shadow: inset 0 0 5px rgba(32, 83, 107, 0.92);
+            background: rgba(160, 158, 177, 0.331);
+        }
+
+        /*边角*/
+        .jsonPre::-webkit-scrollbar-corner {
+            background: rgba(160, 158, 177, 0.331);
+        }
+
+        /*滚动条里面轨道样式*/
+        .jsonPre::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(32, 83, 107, 0.92);
+            border-radius: 0;
+            background: rgba(103, 102, 114, 0.331);
+        }
+
+        .jsonPre {
+            background-color: #262629;
+            color: #fff;
+            width: 90%;
+            max-height: 50vh;
+            outline: 1px solid #ccc;
+            padding: 5px;
+            overflow: scroll;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .btn-pre-copy {
+            position: absolute;
+            right: 8px;
+            top: 4px;
+            color: #a5a59f;
+            user-select: none;
+        }
+
+        .string {
+            color: green;
+        }
+
+        .number {
+            color: darkorange;
+        }
+
+        .boolean {
+            color: blue;
+        }
+
+        .null {
+            color: magenta;
+        }
+
+        .key {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <div class="common-layout">
+        <el-container>
+            <el-container>
+                <el-main>
+                    <el-form :model="form" label-width="120px">
+                        <el-form-item label="请求地址来源">
+                            <el-input v-model="form.requestHref"
+                                      placeholder="支持模糊搜索,例如:    https://element-plus.org/zh-C"/>
+                        </el-form-item>
+                        <el-form-item label="接口地址">
+                            <el-input v-model="form.url"
+                                      placeholder="支持模糊搜索,例如:    /proxyApi/sgj/sbhzzb?pk=CAJFBW7GmOf"/>
+                        </el-form-item>
+
+
+                        <el-form-item label="请求类型">
+                            <el-col :span="3">
+                                <el-select v-model="form.method" placeholder="选择请求类型">
+                                    <el-option v-for="item in methodOptions" :key="item.value" :label="item.label"
+                                               :value="item.value" :disabled="item.disabled"/>
+                                </el-select>
+                            </el-col>
+                            <el-col :span="5">
+                                <el-form-item label="响应状态">
+                                    <el-select v-model="form.status" placeholder="选择响应状态">
+                                        <el-option v-for="item in statusOptions" :key="item.value"
+                                                   :label="item.label" :value="item.value" :disabled="item.disabled"/>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+
+                            <el-col :span="5">
+                                <el-form-item label="日志类型">
+                                    <el-select v-model="form.logType" placeholder="选择日志类型">
+                                        <el-option v-for="item in logTypeOptions" :key="item.value"
+                                                   :label="item.label" :value="item.value" :disabled="item.disabled"/>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+
+                            <el-col :span="5">
+                                <el-form-item label="日志等级">
+                                    <el-select v-model="form.logLevel" placeholder="选择日志等级">
+                                        <el-option v-for="item in logLevelOptions" :key="item.value"
+                                                   :label="item.label" :value="item.value" :disabled="item.disabled"/>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-form-item>
+
+
+                        <el-form-item label="请求时间范围">
+                            <el-col :span="4">
+                                <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间"
+                                                style="width: 100%"/>
+                            </el-col>
+                            <el-col :span="1" class="text-center">
+
+                            </el-col>
+                            <el-col :span="4">
+                                <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间"
+                                                style="width: 100%"/>
+                            </el-col>
+                        </el-form-item>
+                        <el-form-item label="响应速度范围" label-width="120px">
+                            <el-col :span="2">
+                                <el-input-number v-model="form.startSpeed" :min="0"/>
+                            </el-col>
+                            <el-col :span="1" class="text-center"></el-col>
+                            <el-col :span="2">
+                                <el-input-number v-model="form.endSpeed" :min="1"/>
+                            </el-col>
+                        </el-form-item>
+                        <el-form-item label-width="20px">
+                            <el-button type="primary" @click="onSubmit">查询</el-button>
+                            <el-button @click="onReset">重置</el-button>
+                            <el-button type="danger" @click="onDelStorage">重置数据库中所有日志数据</el-button>
+                        </el-form-item>
+                    </el-form>
+
+
+                    <!-- <el-table-v2 :columns="columns" :data="data" :estimated-row-height="50"
+                        :expand-column-key="columns[0].key" :width="700" :height="400">
+                        <template #row="props">
+                            <Row v-bind="props" />
+                        </template>
+                    </el-table-v2> -->
+                    <el-table :data="tableData" size="small" highlight-current-row="true" style="font-size: 10px"
+                              stripe :border="true" max-height="450">
+                        <el-table-column label="#" type="expand">
+                            <template #default="props">
+                                <div style="padding: 10px;">
+                                    <!-- {{props.row.requestQuery}}
+                                    {{props.row.requestBody}}
+                                    {{props.row.data}}
+                                    {{props.row.responseData}} -->
+                                    <template v-if="props.row.requestQuery">
+                                        <p m="t-0 b-2">请求入参(Query):
+                                        <div class="jsonPre">
+                                            <span class="btn-pre-copy"
+                                                  @click="onCodeCopy(props.row.requestQuery)">复制代码</span>
+                                            <pre v-html='parse2(props.row.requestQuery)'></pre>
+                                        </div>
+                                        </p>
+                                    </template>
+                                    <template v-if="props.row.requestBody">
+                                        <p m="t-0 b-2">请求入参(Body):
+                                        <div class="jsonPre">
+                                            <span class="btn-pre-copy" @click="onCodeCopy(props.row.requestBody)">复制代码</span>
+                                            <pre v-html='parse2(props.row.requestBody)'></pre>
+                                        </div>
+                                        </p>
+                                    </template>
+                                    <template v-if="props.row.data">
+                                        <p m="t-0 b-2" v-if="props.row.data">msg: {{ props.row.data }}</p>
+                                    </template>
+                                    <template v-if="props.row.responseData">
+                                        <p m="t-0 b-2">响应数据:
+                                        <div class="jsonPre">
+                                            <span class="btn-pre-copy" @click="onCodeCopy(props.row.responseData)">复制代码</span>
+                                            <pre v-html='parse2(props.row.responseData)'></pre>
+                                        </div>
+                                        </p>
+                                    </template>
+                                </div>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="120" align="center" label="uuid" show-overflow-tooltip sortable
+                                         prop="uuid">
+                            <template #default="props">
+                                <span>{{ props.row.uuid || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="90" align="center" label="日志类型" show-overflow-tooltip
+                                         prop="logType">
+                            <template #default="props">
+                                <span>{{  logTypeOptions.filter(i=>i.value==props.row.logType)[0].label || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="90" align="center" label="日志等级" show-overflow-tooltip
+                                         prop="logLevel">
+                            <template #default="props">
+                                <span>{{ props.row.logLevel || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="90" align="center" label="请求方法" show-overflow-tooltip prop="method">
+                            <template #default="props">
+                                <span>{{ props.row.method || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="120" align="center" label="响应状态" show-overflow-tooltip sortable
+                                         prop="status">
+                            <template #default="props">
+                                <span>{{ props.row.status || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="120" align="center" label="响应速度" show-overflow-tooltip sortable
+                                         prop="responseSpeed">
+                            <template #default="props">
+                                <span>{{ props.row.responseSpeed ? props.row.responseSpeed + "ms" : '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="200" align="center" label="请求地址" show-overflow-tooltip sortable
+                                         prop="url">
+                            <template #default="props">
+                                <span>{{ props.row.url || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="200" align="center" label="请求来源(ip)" show-overflow-tooltip sortable
+                                         prop="remoteAddress">
+                            <template #default="props">
+                                <span>{{ props.row.remoteAddress || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="200" align="center" label="请求来源(href)" show-overflow-tooltip
+                                         sortable prop="requestHref">
+                            <template #default="props">
+                                <span>{{ props.row.requestHref || '---' }}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column width="140" align="center" label="请求时间" show-overflow-tooltip sortable
+                                         prop="startTime">
+                            <template #default="props">
+                                <span>{{ formatDate(props.row.startTime) || '---' }}</span>
+                            </template>
+                        </el-table-column>
+
+                        <el-table-column width="260" align="center" label="操作"
+                                         class-name="small-padding fixed-width">
+                            <template #default="props">
+                                <!-- <el-button class="filter-item" type="primary" @click="tableItemDetail(scope.row)">查看
+                                </el-button> -->
+                                <el-button class="filter-item" type="danger" @click="onDelTableItem(props.row)">删除
+                                </el-button>
+                            </template>
+                        </el-table-column>
+
+                    </el-table>
+
+                    <el-pagination style="margin-top: 10px;" layout="total, sizes, prev, pager, next, jumper"
+                                   :total="pagination.total" :page-sizes="[10, 20, 50, 100,200,400]"
+                                   :currentPage="pagination.pageNum + 1" @size-change="onSizeChange"
+                                   @current-change="onCurrentChange">
+                    </el-pagination>
+                </el-main>
+            </el-container>
+        </el-container>
+    </div>
+
+
+</div>
+<!-- <script>
+    require.config({ paths: { 'vs': 'http://127.0.0.1:8689/cdn/vs' } });
+    require.config({ 'vs/nls': { availableLanguages: { '*': 'zh-cn' } } });
+    require(['vs/editor/editor#jsonPre'], function () {
+        var editor = monaco.editor.create(document.getElementById('container'), {
+            value: 'SELECT * FROM myindex',
+            language: 'sql',
+            theme: 'vs-dark'
+        });
+    });
+</script> -->
+<script>
+    const request = async function (url, data = {}, opt = {}) {
+        url = "http://127.0.0.1:8689" + url
+        try {
+            const response = await fetch(url, Object.assign({
+                method: 'POST', // *GET, POST, PUT, DELETE, etc.
+                mode: 'no-cors', // no-cors, *cors, same-origin
+                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: 'same-origin', // include, *same-origin, omit
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8'
+                },
+                redirect: 'follow', // manual, *follow, error
+                referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+                body: JSON.stringify(data) // body data type must match "Content-Type" header
+            }, opt));
+            // return response.body
+            return response.json(); // parses JSON response into native JavaScript objects
+        } catch (e) {
+            console.log("fetch接口请求错误", e)
+            return {msg: "请求失败！", code: 500}
+        }
+    }
+    // 请求封装
+    const Request = function (url, param, option) {
+        return new Promise((resolve, reject) => {
+            let opt = {
+                method: 'POST'
+            };
+            opt = Object.assign(opt, option)
+            const xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = xhr.responseText		// 接收响应信息
+                    resolve(JSON.parse(data))
+                }
+            }
+            xhr.open(opt.method, "http://127.0.0.1:8689" + url, true)
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')	// 设置Content-type
+            xhr.send(JSON.stringify(param))   //发送请求到服务器
+        })
+    }
+    const returnResetFormData = function () {
+        return {
+            requestHref: '',
+            url: '',
+            method: '',
+            status: '',
+            logType: '',
+            logLevel: '',
+            startTime: '',
+            endTime: '',
+            startSpeed: 0,
+            endSpeed: 1000,
+        }
+    }
+    const App = {
+        setup() {
+            const {reactive, ref} = Vue;
+
+            /**
+             * data
+             * */
+            let editor = reactive({
+                aaa: ""
+            })
+            let form = reactive(returnResetFormData());
+            let tableData = reactive([]);
+            // 分页器数据
+            let pagination = reactive({
+                total: 10,
+                pageNum: 0,
+                pageSize: 10
+            });
+
+
+            /**
+             * methods
+             * */
+            const onSubmit = async () => {
+                Request('/logs/logList', Object.assign(pagination, form)).then(res => {
+                    console.log('/logs/logList 响应数据：', res);
+                    pagination.total = res.total
+                    while (tableData.shift()) {
+
+                    }
+                    tableData.push(...res.data)
+                    // 初始化编辑器，确保dom已经渲染
+                    // editor.aaa = monaco.editor.create(document.getElementById('container'), {
+                    //     value: 'SDGHSKDLGHLKDSJGKLDSJGKLSDJGLK', // 编辑器初始显示文字
+                    //     language: 'sql',//语言支持自行查阅demo
+                    //     automaticLayout: true,//自动布局
+                    //     theme: 'vs-dark' //官方自带三种主题vs, hc-black, or vs-dark
+                    // });
+                });
+            }
+            const onReset = () => {
+                let obj = returnResetFormData()
+                for (let i in obj) form[i] = obj[i]
+            }
+            const onDelStorage = () => {
+                ElementPlus.ElMessageBox.confirm('清空日志库是危险操作，是否进行此操作。', '危险', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'danger',
+                    }
+                ).then(() => {
+                    Request('/logs/logDocument', {}, {method: "delete"}).then(res => {
+                        console.log('/logs/logDocument 响应数据：', res);
+                        if (res.dbCode == 200) {
+                            ElementPlus.ElMessage({
+                                message: res.msg,
+                                type: 'success',
+                            })
+                            onSubmit()
+                        }
+
+                    });
+                })
+            }
+            const onSizeChange = (number) => {
+                pagination.pageSize = number;
+                onSubmit();
+            }
+            const onCurrentChange = (number) => {
+                pagination.pageNum = number - 1;
+                onSubmit();
+            }
+            const formatDate = (data) => {
+                const dt = new Date(data)
+                return dt.getFullYear()
+                    + '-' + (dt.getMonth() + 1 > 10 ? dt.getMonth() + 1 : "0" + (dt.getMonth() + 1))
+                    + '-' + (dt.getDate() >= 10 ? dt.getDate() : "0" + dt.getDate())
+                    + ' ' + (dt.getHours() >= 10 ? dt.getHours() : "0" + dt.getHours())
+                    + ':' + (dt.getMinutes() >= 10 ? dt.getMinutes() : "0" + dt.getMinutes())
+                    + ':' + (dt.getSeconds() >= 10 ? dt.getSeconds() : "0" + dt.getSeconds())
+            }
+            const onDelTableItem = function (data) {
+                Request('/logs/log', {uuid: data.uuid}, {method: "delete"}).then(res => {
+                    console.log('/logs/log 响应数据：', res);
+                    ElementPlus.ElMessage({
+                        message: '删除成功！',
+                        type: 'success',
+                    })
+                    onSubmit()
+                });
+            }
+            const onCodeCopy = function (data) {
+                if (navigator.clipboard) {
+                    // let _data = new DataTransfer();
+                    // _data.items.add("text/plain", "data");
+                    navigator.clipboard.writeText(JSON.stringify(data)).then(function () {
+                        ElementPlus.ElMessage({
+                            message: '内容已经复制到剪贴板！',
+                            type: 'success',
+                        })
+                    }, function (e) {
+                        ElementPlus.ElMessage({
+                            message: '内容复制到剪贴板失败！',
+                            type: 'danger',
+                        })
+                    });
+                } else {
+                    var textarea = document.createElement('textarea');
+                    document.body.appendChild(textarea);
+                    textarea.style.position = 'fixed';
+                    textarea.style.clip = 'rect(0 0 0 0)';
+                    textarea.style.top = '10px';
+                    textarea.value = data;
+                    textarea.select();
+                    document.execCommand('copy', true);
+                    document.body.removeChild(textarea);
+                }
+                // ElementPlus.ElMessage({
+                //     message: '内容已经复制到剪贴板！',
+                //     type: 'success',
+                // })
+            }
+            // json格式美化
+            const parse2 = (str) => {
+                // 设置缩进为2个空格
+                if (!str) return '---'
+                str = JSON.stringify(JSON.parse(str), null, 2);
+                str = str
+                    .replace(/&/g, '&')
+                    .replace(/</g, '<')
+                    .replace(/>/g, '>');
+                return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                    var cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                });
+            }
+
+
+            /**
+             * otherOptions
+             * */
+            const methodOptions = [
+                {value: 'GET', label: 'GET'},
+                {value: 'POST', label: 'POST'},
+                {value: 'DELETE', label: 'DELETE'},
+                {value: 'PUT', label: 'PUT'},
+                {value: 'HEAD', label: 'HEAD'}
+            ]
+            const statusOptions = [
+                {value: '200', label: '200'},
+                {value: '400', label: '400'},
+                {value: '404', label: '404'},
+                {value: '500', label: '500'}
+            ]
+
+            const logTypeOptions = [
+                {value: 'apiLogger', label: '接口请求'},
+                {value: 'systemLogger', label: '系统打印'},
+            ]
+            const logLevelOptions = [
+                {value: 'INFO', label: 'INFO'},
+                {value: 'ERROR', label: 'ERROR'},
+            ]
+
+
+            return {
+                onSubmit,
+                onReset,
+                onDelStorage,
+                onSizeChange,
+                onCurrentChange,
+                formatDate,
+                onDelTableItem,
+                onCodeCopy,
+                parse2,
+                form,
+                methodOptions,
+                statusOptions,
+                logTypeOptions,
+                logLevelOptions,
+
+
+                pagination,
+                tableData
+
+            }
+        },
+    };
+    const app = Vue.createApp(App);
+    app.use(ElementPlus);
+    app.mount("#app");
+
+
+    // 流程 http 、session 、通信协议、
+</script>
+</body>
+
+</html>
